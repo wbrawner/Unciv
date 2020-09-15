@@ -38,6 +38,7 @@ class GameSettings {
     var isFreshlyCreated = false
     var extendedMapEditor = false
     var showModManager = false
+    var savesFolder: String? = null
 
     init {
         // 26 = Android Oreo. Versions below may display permanent icon in notification bar.

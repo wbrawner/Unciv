@@ -3,9 +3,11 @@ package com.unciv.ui.worldscreen.mainmenu
 import com.badlogic.gdx.Application
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.graphics.Color
+import com.badlogic.gdx.scenes.scene2d.Action
 import com.badlogic.gdx.scenes.scene2d.ui.*
 import com.badlogic.gdx.utils.Array
 import com.unciv.MainMenuScreen
+import com.unciv.logic.SaveFolderHelper
 import com.unciv.logic.civilization.PlayerType
 import com.unciv.models.UncivSound
 import com.unciv.models.translations.TranslationFileWriter
@@ -130,6 +132,28 @@ class OptionsPopup(val previousScreen:CameraStageBaseScreen) : Popup(previousScr
 
         addYesNoRow("Extended map editor", settings.extendedMapEditor) { settings.extendedMapEditor = it }
         addYesNoRow("Experimental mod manager", settings.showModManager) { settings.showModManager = it; reloadWorldAndOptions() }
+        previousScreen.game.saveFolderHelper?.let {
+            if (!it.canChooseFolder()) return@let
+
+            innerTable.add("Save Games Folder".toLabel())
+            val savesFolderButton = TextButton(settings.savesFolder?: "Internal", skin).apply {
+                onClick {
+                    val savesFolder = it.chooseFolder()?: return@onClick
+                    with (savesFolder.path()) {
+                        settings.savesFolder = this
+                        setText(this)
+                    }
+                }
+            }
+            val resetButton = TextButton("Reset", skin).apply {
+                onClick {
+                    settings.savesFolder = null
+                    savesFolderButton.setText("Not set")
+                }
+            }
+            innerTable.add(savesFolderButton)
+            innerTable.add(resetButton).row()
+        }
 
         addSoundEffectsVolumeSlider()
         addMusicVolumeSlider()

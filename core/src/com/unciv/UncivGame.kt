@@ -28,6 +28,7 @@ class UncivGame(parameters: UncivGameParameters) : Game() {
     val cancelDiscordEvent = parameters.cancelDiscordEvent
     val fontImplementation = parameters.fontImplementation
     val consoleMode = parameters.consoleMode
+    val saveFolderHelper = parameters.saveFolderHelper
 
     lateinit var gameInfo: GameInfo
     fun isGameInfoInitialized() = this::gameInfo.isInitialized
@@ -100,6 +101,7 @@ class UncivGame(parameters: UncivGameParameters) : Game() {
             }
         }
         crashController = CrashController.Impl(crashReportSender)
+        GameSaver.saveFolderHelper = saveFolderHelper
     }
 
     fun restoreSize() {
