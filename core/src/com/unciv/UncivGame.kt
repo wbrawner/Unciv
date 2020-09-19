@@ -13,7 +13,10 @@ import com.unciv.models.metadata.GameSettings
 import com.unciv.models.ruleset.RulesetCache
 import com.unciv.models.translations.Translations
 import com.unciv.ui.LanguagePickerScreen
-import com.unciv.ui.utils.*
+import com.unciv.ui.utils.CameraStageBaseScreen
+import com.unciv.ui.utils.CrashController
+import com.unciv.ui.utils.ImageGetter
+import com.unciv.ui.utils.center
 import com.unciv.ui.worldscreen.WorldScreen
 import java.util.*
 import kotlin.concurrent.thread
@@ -91,17 +94,21 @@ class UncivGame(parameters: UncivGameParameters) : Game() {
             // This stuff needs to run on the main thread because it needs the GL context
             Gdx.app.postRunnable {
                 ImageGetter.ruleset = RulesetCache.getBaseRuleset() // so that we can enter the map editor without having to load a game first
-                thread(name="Music") { startMusic() }
+                thread(name = "Music") { startMusic() }
                 restoreSize()
 
                 if (settings.isFreshlyCreated) {
                     setScreen(LanguagePickerScreen())
-                } else { setScreen(MainMenuScreen()) }
+                } else {
+                    setScreen(MainMenuScreen())
+                }
                 isInitialized = true
             }
         }
         crashController = CrashController.Impl(crashReportSender)
-        GameSaver.saveFolderHelper = saveFolderHelper
+        saveFolderHelper?.let {
+            GameSaver.saveFolderHelper = it
+        }
     }
 
     fun restoreSize() {

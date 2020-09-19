@@ -1,25 +1,27 @@
 package com.unciv.app
 
+import android.Manifest.permission.WRITE_EXTERNAL_STORAGE
 import android.app.Activity
 import android.content.Intent
 import android.content.Intent.ACTION_OPEN_DOCUMENT_TREE
 import android.os.Build
 import androidx.annotation.RequiresApi
+import androidx.core.content.PermissionChecker
+import androidx.core.content.PermissionChecker.PERMISSION_GRANTED
 import com.badlogic.gdx.Gdx
 import com.badlogic.gdx.files.FileHandle
-import com.unciv.logic.GameSaver
-import com.unciv.logic.GameSaver.getSubfolder
-import com.unciv.logic.SaveFolderHelper
+import com.unciv.logic.SaveFolderHelperInternal
 import com.unciv.models.metadata.GameSettings
 import java.io.File
 
 const val REQ_SAVE_FOLDER = 1
+const val REQ_PERMISSION_EXTERNAL_STORAGE = 2
 
-class SaveFolderHelperAndroid(private val activity: Activity) : SaveFolderHelper {
+class SaveFolderHelperAndroid(private val activity: Activity) : SaveFolderHelperInternal() {
     /** When set, we know we're on Android and can save to the app's personal external file directory
      * Only allow mods on KK+, to avoid READ_EXTERNAL_STORAGE permission earlier versions need
      * See https://developer.android.com/training/data-storage/app-specific#external-access-files */
-    val externalFilesDir = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+    private val externalFilesDir = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
         copyMods(activity)
         activity.getExternalFilesDir(null)?.path ?: ""
     } else ""
@@ -27,7 +29,7 @@ class SaveFolderHelperAndroid(private val activity: Activity) : SaveFolderHelper
     override fun canChooseFolder(): Boolean = Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP
 
     override fun getSave(settings: GameSettings, GameName: String, multiplayer: Boolean): FileHandle {
-        val localfile = Gdx.files.local("${getSubfolder(multiplayer)}/$GameName")
+        val localfile = super.getSave(settings, GameName, multiplayer)
         if (externalFilesDir == "" || !Gdx.files.isExternalStorageAvailable) return localfile
         val externalFile = Gdx.files.absolute(externalFilesDir + "/${getSubfolder(multiplayer)}/$GameName")
         if (localfile.exists() && !externalFile.exists()) return localfile
@@ -42,6 +44,11 @@ class SaveFolderHelperAndroid(private val activity: Activity) : SaveFolderHelper
 
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     override fun chooseFolder(): FileHandle? {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && PermissionChecker.checkSelfPermission(activity, WRITE_EXTERNAL_STORAGE) != PERMISSION_GRANTED) {
+            activity.requestPermissions(arrayOf(WRITE_EXTERNAL_STORAGE), REQ_PERMISSION_EXTERNAL_STORAGE)
+            return null
+        }
         activity.startActivityForResult(Intent(ACTION_OPEN_DOCUMENT_TREE), REQ_SAVE_FOLDER)
         return null
     }

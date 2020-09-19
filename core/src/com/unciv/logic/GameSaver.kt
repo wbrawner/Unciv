@@ -11,14 +11,14 @@ import java.io.File
 import kotlin.concurrent.thread
 
 object GameSaver {
-    private const val saveFilesFolder = "SaveFiles"
-    private const val multiplayerFilesFolder = "MultiplayerGames"
+    const val saveFilesFolder = "SaveFiles"
+    const val multiplayerFilesFolder = "MultiplayerGames"
     private const val settingsFileName = "GameSettings.json"
-    lateinit var saveFolderHelper: SaveFolderHelper
+
+    var saveFolderHelper: SaveFolderHelper = SaveFolderHelperInternal()
 
     fun json() = Json().apply { setIgnoreDeprecated(true); ignoreUnknownFields = true } // Json() is NOT THREAD SAFE so we need to create a new one for each function
 
-    fun getSubfolder(multiplayer: Boolean = false) = if (multiplayer) multiplayerFilesFolder else saveFilesFolder
 
     fun getSave(GameName: String, multiplayer: Boolean = false): FileHandle = saveFolderHelper.getSave(getGeneralSettings(), GameName, multiplayer)
 
